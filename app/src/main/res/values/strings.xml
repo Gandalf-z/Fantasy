@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">牧云</string>
+    <string name="listView_name">牧云</string>
+    <string name="main_activity_toolbar_title">音乐</string>
+
+    <string name="person_center_my_hot_songs">我的热门曲目</string>
+    <string name="person_center_favorite">最喜欢的</string>
+    <string name="person_center_recent_play">最近播放</string>
+</resources>
