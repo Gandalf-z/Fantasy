@@ -81,7 +81,8 @@ public class AlbumsListFragmentRecyclerViewAdapter extends RecyclerView.Adapter<
     public void onBindViewHolder(AlbumsListFragmentRecyclerViewAdapter.MyViewHolder holder, int position) {
 //        holder.albumArt.setTag(currentAlbumInfo.getAlbumId());
         //保存item位置
-        holder.itemView.setTag(position);
+        AlbumInfo albumInfo = albumInfos.get(position);
+        holder.itemView.setTag(albumInfo.getAlbumName());
     }
 
     @Override

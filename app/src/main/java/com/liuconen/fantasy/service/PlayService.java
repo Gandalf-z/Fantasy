@@ -50,26 +50,28 @@ public class PlayService extends Service {
     public int onStartCommand(final Intent intent, int flags, int startId) {
         Bundle bundle = intent.getExtras();
         //get current playlist
-        List<Mp3Info> cPlayList = (List<Mp3Info>) bundle.get("dreamlikemusicplayer.PLAY_LIST");
+        List<Mp3Info> cPlayList = (List<Mp3Info>) bundle.get("fantasy.PLAY_LIST");
         if (mp3InfoList != cPlayList) {
             mp3InfoList = cPlayList;
         }
         //get song index played
-        currentSongIndex = bundle.getInt("dreamlikemusicplayer.SONG_INDEX");
+        currentSongIndex = bundle.getInt("fantasy.SONG_INDEX");
         Mp3Info cSong = mp3InfoList.get(currentSongIndex);
         playSong(cSong, true);
 
-        sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
+        sendPlayStatusChangedBroadcast("fantasy.action.PLAY_STATUS_CHANGED");
 
         return super.onStartCommand(intent, flags, startId);
     }
 
     public void sendPlayStatusChangedBroadcast(String broadCastText) {
-        Intent intent = new Intent(broadCastText);
-        Bundle bundle = new Bundle();
-        bundle.putParcelable("dreamlikemusicplayer.PLAYING_SONG", mp3InfoList.get(currentSongIndex));
-        intent.putExtras(bundle);
-        sendBroadcast(intent);
+        if(mp3InfoList != null){
+            Intent intent = new Intent(broadCastText);
+            Bundle bundle = new Bundle();
+            bundle.putParcelable("fantasy.PLAYING_SONG", mp3InfoList.get(currentSongIndex));
+            intent.putExtras(bundle);
+            sendBroadcast(intent);
+        }
     }
 
     /**
@@ -93,10 +95,10 @@ public class PlayService extends Service {
     public void playOrPause() {
         if (mp3.isPlaying()) {
             mp3.pause();
-            sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PAUSE");
+            sendPlayStatusChangedBroadcast("fantasy.action.PAUSE");
         } else {
             mp3.start();
-            sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PLAY");
+            sendPlayStatusChangedBroadcast("fantasy.action.PLAY");
         }
     }
 
@@ -105,33 +107,33 @@ public class PlayService extends Service {
         if (getPreviousSong() != null) {
             playSong(getPreviousSong(), mp3.isPlaying());
             //传递isPlaying判断当前播放状态，如果为播放那么切换后为继续播放
-            sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
+            sendPlayStatusChangedBroadcast("fantasy.action.PLAY_STATUS_CHANGED");
         }
     }
 
     public void playNextSong() {
         if (getNextSong() != null) {
             playSong(getNextSong(), true);
-            sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
+            sendPlayStatusChangedBroadcast("fantasy.action.PLAY_STATUS_CHANGED");
         }
-    }
-
-    public int getPlayStatus(){
-        return mp3.isPlaying() ? 2 : 1;
     }
 
     private Mp3Info getPreviousSong() {
         Mp3Info mp3Info = null;
-        if (currentSongIndex > 0) {
-            mp3Info = mp3InfoList.get(--currentSongIndex);
+        if (mp3InfoList != null) {
+            if (currentSongIndex > 0) {
+                mp3Info = mp3InfoList.get(--currentSongIndex);
+            }
         }
         return mp3Info;
     }
 
     private Mp3Info getNextSong() {
         Mp3Info mp3Info = null;
-        if (currentSongIndex < mp3InfoList.size() - 1) {
-            mp3Info = mp3InfoList.get(++currentSongIndex);
+        if(mp3InfoList != null){
+            if (currentSongIndex < mp3InfoList.size() - 1) {
+                mp3Info = mp3InfoList.get(++currentSongIndex);
+            }
         }
         return mp3Info;
     }
@@ -140,5 +142,9 @@ public class PlayService extends Service {
         public PlayService getService() {
             return PlayService.this;
         }
+    }
+
+    public MediaPlayer getMediaPlayer(){
+        return mp3;
     }
 }

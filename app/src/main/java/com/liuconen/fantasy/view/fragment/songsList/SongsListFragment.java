@@ -42,8 +42,8 @@ public class SongsListFragment extends BaseFragment {
             public void onItemCLick(View view, Object data) {
                 Intent intent = new Intent(getContext(), PlayService.class);
                 Bundle bundle = new Bundle();
-                bundle.putParcelableArrayList("dreamlikemusicplayer.PLAY_LIST", mp3Infos);
-                bundle.putInt("dreamlikemusicplayer.SONG_INDEX", (Integer) data);
+                bundle.putParcelableArrayList("fantasy.PLAY_LIST", mp3Infos);
+                bundle.putInt("fantasy.SONG_INDEX", (Integer) data);
                 intent.putExtras(bundle);
                 intent.setPackage(getContext().getPackageName());
                 getContext().startService(intent);

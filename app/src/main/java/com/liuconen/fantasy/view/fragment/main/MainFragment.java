@@ -77,7 +77,7 @@ public class MainFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
+        intentFilter.addAction("fantasy.action.PLAY_STATUS_CHANGED");
         getActivity().registerReceiver(mReceiver, intentFilter);
     }
 
@@ -132,7 +132,7 @@ public class MainFragment extends Fragment {
     class PlayStatusUpdateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Mp3Info mp3Info = (Mp3Info) intent.getExtras().get("dreamlikemusicplayer.PLAYING_SONG");
+            Mp3Info mp3Info = (Mp3Info) intent.getExtras().get("fantasy.PLAYING_SONG");
             updateWidget(mp3Info);
         }
     }

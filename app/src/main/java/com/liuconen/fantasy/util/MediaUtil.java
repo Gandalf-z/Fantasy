@@ -255,4 +255,51 @@ public class MediaUtil {
         }
         return mp3Infos;
     }
+
+    public static ArrayList<Mp3Info> getMp3InfoByAlbumName(Context context, String albumName) {
+        Cursor cursor = context.getContentResolver().query(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                null,
+                MediaStore.Audio.Media.ALBUM + "=?",
+                new String[]{albumName},
+                MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+
+        ArrayList<Mp3Info> mp3Infos = new ArrayList<>();
+        int songNumberCount = cursor.getCount();
+        for (int i = 0; i < songNumberCount; i++) {
+            cursor.moveToNext();
+            Mp3Info mp3Info = new Mp3Info();
+            long id = cursor.getLong(cursor
+                    .getColumnIndex(MediaStore.Audio.Media._ID));    //音乐id
+            String title = cursor.getString((cursor
+                    .getColumnIndex(MediaStore.Audio.Media.TITLE))); // 音乐标题
+            String artist = cursor.getString(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.ARTIST)); // 艺术家
+//            String album = cursor.getString(cursor
+//                    .getColumnIndex(MediaStore.Audio.Media.ALBUM));    //专辑
+            String displayName = cursor.getString(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+            long duration = cursor.getLong(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.DURATION)); // 时长
+            long size = cursor.getLong(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.SIZE)); // 文件大小
+            String url = cursor.getString(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.DATA)); // 文件路径
+            int isMusic = cursor.getInt(cursor
+                    .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC)); // 是否为音乐
+            if (isMusic != 0) { // 只把音乐添加到集合当中
+                mp3Info.setId(id);
+                mp3Info.setTitle(title);
+                mp3Info.setArtist(artist);
+                mp3Info.setAlbum(albumName);
+                mp3Info.setDisplayName(displayName);
+                mp3Info.setAlbumId(id);
+                mp3Info.setDuration(duration);
+                mp3Info.setSize(size);
+                mp3Info.setUrl(url);
+                mp3Infos.add(mp3Info);
+            }
+        }
+        return mp3Infos;
+    }
 }

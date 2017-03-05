@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.liuconen.fantasy.R;
@@ -28,10 +29,15 @@ import com.liuconen.fantasy.util.MediaUtil;
  * 播放界面
  */
 public class PlayFragment extends Fragment implements View.OnClickListener {
+    final static int MSG_PAUSE = 1;
+    final static int MSG_PLAY = 2;
+    final static int UPDATE_SEEK_BAR = 3;
+
     private ImageView songPic;
     private TextView songName;
     private TextView artist;
 
+    private SeekBar seekBar;
     private ImageButton previousSong = null;
     private ImageButton play = null;
     private ImageButton nextSong = null;
@@ -42,10 +48,8 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         public void onServiceConnected(ComponentName name, IBinder service) {
             mService = ((PlayService.ServiceBinder) service).getService();
             //首次启动初始化界面
-            mService.sendPlayStatusChangedBroadcast("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
-            Message message = Message.obtain();
-            message.what = mService.getPlayStatus();
-            mHandler.sendMessage(message);
+            mService.sendPlayStatusChangedBroadcast("fantasy.action.PLAY_STATUS_CHANGED");
+            mHandler.sendEmptyMessage(mService.getMediaPlayer().isPlaying() ? MSG_PLAY : MSG_PAUSE);
         }
 
         @Override
@@ -54,15 +58,18 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         }
     };
 
-    private final Handler mHandler = new Handler(){
+    private final Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what){
-                case 1:
+            switch (msg.what) {
+                case MSG_PAUSE:
                     play.setImageResource(R.drawable.image_button_play);
                     break;
-                case 2:
+                case MSG_PLAY:
                     play.setImageResource(R.drawable.image_button_pause);
+                    break;
+                case UPDATE_SEEK_BAR:
+                    seekBar.setProgress(mService.getMediaPlayer().getCurrentPosition());
                     break;
                 default:
                     break;
@@ -87,9 +94,9 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
                 .BIND_AUTO_CREATE);
 
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("dreamlikemusicplayer.action.PAUSE");
-        intentFilter.addAction("dreamlikemusicplayer.action.PLAY");
-        intentFilter.addAction("dreamlikemusicplayer.action.PLAY_STATUS_CHANGED");
+        intentFilter.addAction("fantasy.action.PAUSE");
+        intentFilter.addAction("fantasy.action.PLAY");
+        intentFilter.addAction("fantasy.action.PLAY_STATUS_CHANGED");
         getActivity().registerReceiver(mReceiver, intentFilter);
 
     }
@@ -135,6 +142,7 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         songName = (TextView) view.findViewById(R.id.tv_songName);
         artist = (TextView) view.findViewById(R.id.tv_artist);
 
+        seekBar = (SeekBar) view.findViewById(R.id.sb_play_fragment_seek_bar);
         previousSong = (ImageButton) view.findViewById(R.id.btn_previous);
         play = (ImageButton) view.findViewById(R.id.btn_play_or_pause);
         nextSong = (ImageButton) view.findViewById(R.id.btn_next);
@@ -144,18 +152,38 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         play.setOnClickListener(this);
         nextSong.setOnClickListener(this);
         previousSong.setOnClickListener(this);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+            }
+
+            //响应进度条拖动
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                if (mService != null) {
+                    int i = seekBar.getMax();
+                    int j = seekBar.getProgress();
+                    mService.getMediaPlayer().seekTo(seekBar.getProgress());
+                }
+            }
+        });
     }
 
     class PlayStatusUpdateReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getAction()){
-                case "dreamlikemusicplayer.action.PAUSE":
-                case "dreamlikemusicplayer.action.PLAY":
-                    updateButtonStatus(intent.getAction());
+            switch (intent.getAction()) {
+                case "fantasy.action.PAUSE":
+                case "fantasy.action.PLAY":
+                    updateWidgetStatus(intent.getAction());
                     break;
-                case "dreamlikemusicplayer.action.PLAY_STATUS_CHANGED":
-                    refreshWidgetData((Mp3Info) intent.getExtras().get("dreamlikemusicplayer.PLAYING_SONG"));
+                case "fantasy.action.PLAY_STATUS_CHANGED":
+                    refreshWidgetData((Mp3Info) intent.getExtras().get("fantasy.PLAYING_SONG"));
                     break;
                 default:
                     break;
@@ -175,19 +203,35 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
                         artist.setText(mp3Info.getArtist());
                     }
                 });
+                if(mService != null){
+                    seekBar.setMax(mService.getMediaPlayer().getDuration());
+                }
             }
         }).start();
+
+        //更新seekbar
+        if(mService != null){
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while(true){
+                        mHandler.sendEmptyMessage(UPDATE_SEEK_BAR);
+                        try {
+                            Thread.sleep(300);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }).start();
+        }
     }
 
-    void updateButtonStatus(String broadcast){
-        if(broadcast.equals("dreamlikemusicplayer.action.PAUSE")){
-            Message message = Message.obtain();
-            message.what = 1;
-            mHandler.sendMessage(message);
-        }else if(broadcast.equals("dreamlikemusicplayer.action.PLAY")){
-            Message message = Message.obtain();
-            message.what = 2;
-            mHandler.sendMessage(message);
+    void updateWidgetStatus(String broadcast) {
+        if (broadcast.equals("fantasy.action.PAUSE")) {
+            mHandler.sendEmptyMessage(MSG_PAUSE);
+        } else if (broadcast.equals("fantasy.action.PLAY")) {
+            mHandler.sendEmptyMessage(MSG_PLAY);
         }
     }
 }

@@ -50,8 +50,8 @@ public abstract class DetailPageFragment extends ListFragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Intent intent = new Intent(getContext(), PlayService.class);
                 Bundle bundle = new Bundle();
-                bundle.putParcelableArrayList("dreamlikemusicplayer.PLAY_LIST", mp3Infos);
-                bundle.putInt("dreamlikemusicplayer.SONG_INDEX", position);
+                bundle.putParcelableArrayList("fantasy.PLAY_LIST", mp3Infos);
+                bundle.putInt("fantasy.SONG_INDEX", position);
                 intent.putExtras(bundle);
                 intent.setPackage(getContext().getPackageName());
                 getContext().startService(intent);
