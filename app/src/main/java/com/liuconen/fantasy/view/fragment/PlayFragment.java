@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.media.audiofx.Visualizer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -24,6 +25,7 @@ import com.liuconen.fantasy.R;
 import com.liuconen.fantasy.model.Mp3Info;
 import com.liuconen.fantasy.service.PlayService;
 import com.liuconen.fantasy.util.MediaUtil;
+import com.liuconen.fantasy.view.VisualizerView;
 
 /**
  * 播放界面
@@ -42,6 +44,9 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
     private ImageButton play = null;
     private ImageButton nextSong = null;
 
+    private Visualizer mVisualizer;
+    private VisualizerView mVisualizerView;
+
     public PlayService mService;
     private ServiceConnection connection = new ServiceConnection() {
         @Override
@@ -50,6 +55,10 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
             //首次启动初始化界面
             mService.sendPlayStatusChangedBroadcast("fantasy.action.PLAY_STATUS_CHANGED");
             mHandler.sendEmptyMessage(mService.getMediaPlayer().isPlaying() ? MSG_PLAY : MSG_PAUSE);
+
+            //启动可视化效果
+            setupVisualizerFxAndUI();
+            mVisualizer.setEnabled(true);
         }
 
         @Override
@@ -142,6 +151,8 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         songName = (TextView) view.findViewById(R.id.tv_songName);
         artist = (TextView) view.findViewById(R.id.tv_artist);
 
+        mVisualizerView = (VisualizerView) view.findViewById(R.id.vv_play_frag_visualizer_view);
+
         seekBar = (SeekBar) view.findViewById(R.id.sb_play_fragment_seek_bar);
         previousSong = (ImageButton) view.findViewById(R.id.btn_previous);
         play = (ImageButton) view.findViewById(R.id.btn_play_or_pause);
@@ -233,6 +244,28 @@ public class PlayFragment extends Fragment implements View.OnClickListener {
         } else if (broadcast.equals("fantasy.action.PLAY")) {
             mHandler.sendEmptyMessage(MSG_PLAY);
         }
+    }
+
+    private void setupVisualizerFxAndUI() {
+        // Create a VisualizerView (defined below), which will render the simplified audio
+        // wave form to a Canvas.
+//        mVisualizerView = new VisualizerView(this);
+//        mVisualizerView.setLayoutParams(new ViewGroup.LayoutParams(
+//                ViewGroup.LayoutParams.FILL_PARENT,
+//                (int)(VISUALIZER_HEIGHT_DIP * getResources().getDisplayMetrics().density)));
+//        mLinearLayout.addView(mVisualizerView);
+
+        // Create the Visualizer object and attach it to our media player.
+        mVisualizer = new Visualizer(mService.getMediaPlayer().getAudioSessionId());
+        mVisualizer.setCaptureSize(Visualizer.getCaptureSizeRange()[1]);
+        mVisualizer.setDataCaptureListener(new Visualizer.OnDataCaptureListener() {
+            public void onWaveFormDataCapture(Visualizer visualizer, byte[] bytes,
+                                              int samplingRate) {
+                mVisualizerView.updateVisualizer(bytes);
+            }
+
+            public void onFftDataCapture(Visualizer visualizer, byte[] bytes, int samplingRate) {}
+        }, Visualizer.getMaxCaptureRate() / 2, true, false);
     }
 }
 
