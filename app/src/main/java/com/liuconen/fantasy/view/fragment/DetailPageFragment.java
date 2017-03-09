@@ -9,7 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 import com.liuconen.fantasy.R;
 import com.liuconen.fantasy.model.Mp3Info;
@@ -21,15 +23,35 @@ import java.util.ArrayList;
  * Created by liuconen on 2016/10/17.
  */
 
-public abstract class DetailPageFragment extends ListFragment {
+public class DetailPageFragment extends ListFragment {
+
     private ArrayList<Mp3Info> mp3Infos;
+    private String toolbarTitle;
+
+    public static DetailPageFragment newInstance(ArrayList<Mp3Info> mp3Infos, String toolbarTitle) {
+        DetailPageFragment fragment = new DetailPageFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("MP3INFOS", mp3Infos);
+        bundle.putString("TITLE", toolbarTitle);
+        fragment.setArguments(bundle);
+        return fragment;
+    }
 
     @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle bundle = getArguments();
+        mp3Infos = (ArrayList<Mp3Info>) bundle.getSerializable("MP3INFOS");
+        toolbarTitle = bundle.getString("TITLE");
+    }
+
+    @Override
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_detail_page, container, false);
 
         Toolbar mToolbar = (Toolbar) view.findViewById(R.id.tb_detail_page_fragment_toolbar);
-        mToolbar.setTitle(getToolbarTitle());
+        mToolbar.setTitle(toolbarTitle);
         mToolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -37,8 +59,7 @@ public abstract class DetailPageFragment extends ListFragment {
             }
         });
 
-        mp3Infos = getBoundData();
-        setListAdapter(getListViewAdapter(mp3Infos));
+        setListAdapter(getListViewAdapter());
         return view;
     }
 
@@ -59,7 +80,22 @@ public abstract class DetailPageFragment extends ListFragment {
         });
     }
 
-    public abstract ArrayList<Mp3Info> getBoundData();
-    public abstract ListAdapter getListViewAdapter(ArrayList<Mp3Info> mp3Infos);
-    public abstract String getToolbarTitle();
+    private ListAdapter getListViewAdapter() {
+        ListAdapter adapter = new ArrayAdapter<Mp3Info>(getContext(), android.R.layout
+                .simple_list_item_2,
+                android.R.id.text1, mp3Infos) {
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView text1 = (TextView) view.findViewById(android.R.id.text1);
+                TextView text2 = (TextView) view.findViewById(android.R.id.text2);
+
+                Mp3Info cMp3 = mp3Infos.get(position);
+                text1.setText(cMp3.getSongName());
+                text2.setText(cMp3.getArtist() + " | " + cMp3.getAlbum());
+                return view;
+            }
+        };
+        return adapter;
+    }
 }

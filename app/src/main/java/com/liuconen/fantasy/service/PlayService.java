@@ -2,13 +2,17 @@ package com.liuconen.fantasy.service;
 
 import android.app.Service;
 import android.content.Intent;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.widget.Toast;
 
 import com.liuconen.fantasy.model.Mp3Info;
+import com.liuconen.fantasy.util.MyDateBaseHelper;
 
 import java.io.IOException;
 import java.util.List;
@@ -40,6 +44,7 @@ public class PlayService extends Service {
         mp3.setOnErrorListener(new MediaPlayer.OnErrorListener() {
             @Override
             public boolean onError(MediaPlayer mp, int what, int extra) {
+                Toast.makeText(getApplicationContext(), "播放错误", Toast.LENGTH_SHORT);
                 playNextSong();
                 return true;
             }
@@ -65,7 +70,7 @@ public class PlayService extends Service {
     }
 
     public void sendPlayStatusChangedBroadcast(String broadCastText) {
-        if(mp3InfoList != null){
+        if (mp3InfoList != null) {
             Intent intent = new Intent(broadCastText);
             Bundle bundle = new Bundle();
             bundle.putParcelable("fantasy.PLAYING_SONG", mp3InfoList.get(currentSongIndex));
@@ -85,11 +90,65 @@ public class PlayService extends Service {
             mp3.prepare();
             if (playNow) {
                 mp3.start();
+                insertPlayRecord(currentSong.getId());
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
         return currentSong;
+    }
+
+    //记录歌曲播放信息
+    private void insertPlayRecord(final long id) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                MyDateBaseHelper mDataBaseHelper = new MyDateBaseHelper(getApplicationContext(), "PersonalPlayInfo.db", null, 1);
+                SQLiteDatabase db = mDataBaseHelper.getWritableDatabase();
+                String strId = Long.toString(id);
+                /**
+                 * 更新歌曲播放次数
+                 */
+                //首先判断歌曲是否已有播放记录，有直接增加播放次数，没有添加记录并播放次数为1
+                Cursor cursor = db.rawQuery("select * from PersonalPlayInfo where songId = ?", new String[]{strId});
+                if (cursor.moveToFirst()) {     //如果当前歌曲播放记录已存在
+                    db.execSQL("update PersonalPlayInfo set times = times + 1 where songId = ?", new String[]{strId});
+                } else {    //如果歌曲播放记录还从未添加
+                    db.execSQL("insert into PersonalPlayInfo(songId, favorite, times) values(?, ?, ?)",
+                            new String[]{strId, "0", "1"});
+                }
+                //关闭数据库
+                db.close();
+                mDataBaseHelper.close();
+
+                /**
+                 * 加入最近播放记录，默认保存20条记录
+                 */
+                mDataBaseHelper = new MyDateBaseHelper(getApplicationContext(), "RecentPlayRecord.db", null, 1);
+                db = mDataBaseHelper.getWritableDatabase();
+                //先判断记录是否已存在
+                cursor = db.rawQuery("select from RecentPlayRecord where songId = ?", new String[]{strId});
+                if(cursor.moveToFirst()){
+                    db.execSQL("delete from RecentPlayRecord where songId = ?", new String[]{strId});
+                    db.execSQL("insert into RecentPlayRecord values(?)", new String[]{strId});
+                }else{
+                    //再判断当前记录数
+                    cursor = db.rawQuery("select count(*) from RecentPlayRecord", null);
+                    int count = cursor.getCount();
+                    if (count < 20) {
+                        //直接插入当前记录
+                        db.execSQL("insert into RecentPlayRecord(songId) values(?)", new String[]{strId});
+                    } else {
+                        db.execSQL("insert into RecentPlayRecord(songId) values(?)", new String[]{strId});
+                        //删除第一条记录已维持总记录树为20
+                        db.execSQL("delete from RecentPlayRecord where songId in(select songId from RecentPlayRecord limit ?)", new String[]{"1"});
+                    }
+                }
+                db.close();
+                mDataBaseHelper.close();
+            }
+        }).start();
+
     }
 
     public void playOrPause() {
@@ -130,7 +189,7 @@ public class PlayService extends Service {
 
     private Mp3Info getNextSong() {
         Mp3Info mp3Info = null;
-        if(mp3InfoList != null){
+        if (mp3InfoList != null) {
             if (currentSongIndex < mp3InfoList.size() - 1) {
                 mp3Info = mp3InfoList.get(++currentSongIndex);
             }
@@ -144,7 +203,7 @@ public class PlayService extends Service {
         }
     }
 
-    public MediaPlayer getMediaPlayer(){
+    public MediaPlayer getMediaPlayer() {
         return mp3;
     }
 }

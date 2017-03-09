@@ -19,6 +19,8 @@ import android.view.ViewGroup;
 
 import com.liuconen.fantasy.R;
 import com.liuconen.fantasy.adapter.MainFragmentViewPagerAdapter;
+import com.liuconen.fantasy.model.AlbumInfo;
+import com.liuconen.fantasy.model.ArtistInfo;
 import com.liuconen.fantasy.model.Mp3Info;
 import com.liuconen.fantasy.util.MediaUtil;
 import com.liuconen.fantasy.view.CurrentPlayingStatusLayout;
@@ -29,8 +31,9 @@ import com.liuconen.fantasy.view.fragment.personCenter.PersonalCenterFragment;
 import com.liuconen.fantasy.view.fragment.songsList.SongsListFragment;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by liuconen on 2016/4/13.
@@ -46,6 +49,27 @@ public class MainFragment extends Fragment {
 
     private PlayStatusUpdateReceiver mReceiver = new PlayStatusUpdateReceiver();
 
+    private Map<String, List> songInfo;
+    private static MainFragment mainFragment;
+
+    public static MainFragment newInstance(Map songInfo) {
+        if (mainFragment == null) {
+            mainFragment = new MainFragment();
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("SONGINFO", (HashMap) songInfo);
+            mainFragment.setArguments(bundle);
+            return mainFragment;
+        } else {
+            return mainFragment;
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        songInfo = (Map) getArguments().get("SONGINFO");
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle
@@ -55,15 +79,19 @@ public class MainFragment extends Fragment {
         addListener();
 
 
-        ArrayList<String> pagerTitles = new ArrayList<>(Arrays.asList("我的", "歌曲", "艺术家", "专辑"));
+        ArrayList<String> pagerTitles = new ArrayList<>();
+        pagerTitles.add(getContext().getString(R.string.personal));
+        pagerTitles.add(getContext().getString(R.string.playlist));
+        pagerTitles.add(getContext().getString(R.string.artist));
+        pagerTitles.add(getContext().getString(R.string.album));
         List<Fragment> fragments = new ArrayList<>();
         MainFragmentViewPagerAdapter adapter = new MainFragmentViewPagerAdapter(getActivity()
                 .getSupportFragmentManager(), pagerTitles, fragments);
 
         fragments.add(new PersonalCenterFragment());
-        fragments.add(new SongsListFragment());
-        fragments.add(new ArtistsListFragment());
-        fragments.add(new AlbumsListFragment());
+        fragments.add(SongsListFragment.newInstance((ArrayList<Mp3Info>) songInfo.get("MP3INFO")));
+        fragments.add(ArtistsListFragment.newInstance((ArrayList<ArtistInfo>) songInfo.get("ARTIINFO")));
+        fragments.add(AlbumsListFragment.newInstance((ArrayList<AlbumInfo>) songInfo.get("ALBUMINFO")));
 
         mViewPager.setOffscreenPageLimit(NUMBER_OF_OFFSCREEN_PAGE);
         mViewPager.setAdapter(adapter);

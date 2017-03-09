@@ -1,10 +1,12 @@
 package com.liuconen.fantasy.model;
 
+import java.io.Serializable;
+
 /**
  * Created by liuconen on 2016/10/24.
  */
 
-public class AlbumInfo {
+public class AlbumInfo implements Serializable{
     private int albumId;
     private String albumName;
     private int songNumber;

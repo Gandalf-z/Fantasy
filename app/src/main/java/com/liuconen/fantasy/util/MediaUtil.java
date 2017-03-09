@@ -13,6 +13,7 @@ import com.liuconen.fantasy.R;
 import com.liuconen.fantasy.model.AlbumInfo;
 import com.liuconen.fantasy.model.ArtistInfo;
 import com.liuconen.fantasy.model.Mp3Info;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -76,8 +77,8 @@ public class MediaUtil {
         return mp3Infos;
     }
 
-    public static List<ArtistInfo> getArtistInfos(Context context) {
-        List<ArtistInfo> artistInfos = new ArrayList<>();
+    public static ArrayList<ArtistInfo> getArtistInfos(Context context) {
+        ArrayList<ArtistInfo> artistInfos = new ArrayList<>();
         Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI, null, null,
                 null, MediaStore.Audio.Artists.DEFAULT_SORT_ORDER);
         int artistCount = cursor.getCount();
@@ -94,8 +95,8 @@ public class MediaUtil {
         return artistInfos;
     }
 
-    public static List<AlbumInfo> getAlbumInfos(Context context) {
-        List<AlbumInfo> albumInfos = new ArrayList<>();
+    public static ArrayList<AlbumInfo> getAlbumInfos(Context context) {
+        ArrayList<AlbumInfo> albumInfos = new ArrayList<>();
         Cursor cursor = context.getContentResolver().query(MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI, null, null,
                 null, MediaStore.Audio.Albums.DEFAULT_SORT_ORDER);
         int albumCount = cursor.getCount();
@@ -131,7 +132,7 @@ public class MediaUtil {
         } else {
             artwork = BitmapFactory.decodeResource(context.getResources(), R.drawable.default_album);
         }
-        if(in != null){
+        if (in != null) {
             try {
                 in.close();
             } catch (IOException e) {
@@ -153,7 +154,7 @@ public class MediaUtil {
             e.printStackTrace();
         }
         Bitmap artwork = BitmapFactory.decodeStream(in);
-        if(in != null){
+        if (in != null) {
             try {
                 in.close();
             } catch (IOException e) {
@@ -298,6 +299,53 @@ public class MediaUtil {
                 mp3Info.setSize(size);
                 mp3Info.setUrl(url);
                 mp3Infos.add(mp3Info);
+            }
+        }
+        return mp3Infos;
+    }
+
+    public static ArrayList<Mp3Info> getMp3InfoBysongIds(Context context, long[] ids) {
+        ArrayList<Mp3Info> mp3Infos = new ArrayList<>();
+        for (int index = 0; index < ids.length; index++) {
+            Cursor cursor = context.getContentResolver().query(
+                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    null,
+                    MediaStore.Audio.Media._ID + "=?",
+                    new String[]{Long.toString(ids[index])},
+                    MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+
+            if (cursor.moveToFirst()) {
+                Mp3Info mp3Info = new Mp3Info();
+                long id = cursor.getLong(cursor
+                        .getColumnIndex(MediaStore.Audio.Media._ID));    //音乐id
+                String title = cursor.getString((cursor
+                        .getColumnIndex(MediaStore.Audio.Media.TITLE))); // 音乐标题
+                String artist = cursor.getString(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.ARTIST)); // 艺术家
+                String album = cursor.getString(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.ALBUM));    //专辑
+                String displayName = cursor.getString(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+                long duration = cursor.getLong(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.DURATION)); // 时长
+                long size = cursor.getLong(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.SIZE)); // 文件大小
+                String url = cursor.getString(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.DATA)); // 文件路径
+                int isMusic = cursor.getInt(cursor
+                        .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC)); // 是否为音乐
+                if (isMusic != 0) { // 只把音乐添加到集合当中
+                    mp3Info.setId(id);
+                    mp3Info.setTitle(title);
+                    mp3Info.setArtist(artist);
+                    mp3Info.setAlbum(album);
+                    mp3Info.setDisplayName(displayName);
+                    mp3Info.setAlbumId(id);
+                    mp3Info.setDuration(duration);
+                    mp3Info.setSize(size);
+                    mp3Info.setUrl(url);
+                    mp3Infos.add(mp3Info);
+                }
             }
         }
         return mp3Infos;

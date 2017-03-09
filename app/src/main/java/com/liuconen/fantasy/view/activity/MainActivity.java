@@ -18,6 +18,7 @@ import com.liuconen.fantasy.view.fragment.main.MainFragment;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by liuconen on 2016/4/13.
@@ -45,11 +46,14 @@ public class MainActivity extends FragmentActivity {
         //响应系统音量控制
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
+        //取得启动页预加载的数据
+        Map songInfo = (Map) getIntent().getSerializableExtra("SONGINFO");
+        MainFragment mainFragment = MainFragment.newInstance(songInfo);
 
         FragmentManager fm = getSupportFragmentManager();
         FragmentTransaction transaction = fm.beginTransaction();
         if (fm.findFragmentByTag("MAIN_FRAGMENT") == null) {
-            transaction.add(R.id.main_layout, new MainFragment(), "MAIN_FRAGMENT");
+            transaction.add(R.id.main_layout, mainFragment, "MAIN_FRAGMENT");
         } else {
             transaction.show(fm.findFragmentByTag("MAIN_FRAGMENT"));
         }

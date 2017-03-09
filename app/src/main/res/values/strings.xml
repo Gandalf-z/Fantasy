@@ -3,7 +3,16 @@
     <string name="listView_name">牧云</string>
     <string name="main_activity_toolbar_title">音乐</string>
 
+    <string name="personal">个人</string>
+    <string name="playlist">歌曲</string>
+    <string name="artist">艺术家</string>
+    <string name="album">专辑</string>
+
     <string name="person_center_my_hot_songs">我的热门曲目</string>
     <string name="person_center_favorite">最喜欢的</string>
     <string name="person_center_recent_play">最近播放</string>
+
+    <string name="no_favorite_song">你还没有添加过喜欢的歌曲哦</string>
+    <string name="no_hot_song">你最近还没有播放过歌曲</string>
+    <string name="no_recent_song">你最近还没有播放过歌曲</string>
 </resources>

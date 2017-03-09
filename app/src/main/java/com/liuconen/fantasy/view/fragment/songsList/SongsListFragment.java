@@ -26,6 +26,26 @@ public class SongsListFragment extends BaseFragment {
     private ArrayList<Mp3Info> mp3Infos;
     private final int SPACING_IN_PIXEL = 8;
 
+    private static SongsListFragment songsListFragment;
+    public static SongsListFragment newInstance(ArrayList<Mp3Info> mp3Infos){
+        if(songsListFragment == null){
+            songsListFragment = new SongsListFragment();
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("MP3INFOS", mp3Infos);
+            songsListFragment.setArguments(bundle);
+
+            return songsListFragment;
+        }else{
+            return songsListFragment;
+        }
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        mp3Infos = (ArrayList<Mp3Info>) getArguments().get("MP3INFOS");
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle
