@@ -127,7 +127,7 @@ public class PlayService extends Service {
                 mDataBaseHelper = new MyDateBaseHelper(getApplicationContext(), "RecentPlayRecord.db", null, 1);
                 db = mDataBaseHelper.getWritableDatabase();
                 //先判断记录是否已存在
-                cursor = db.rawQuery("select from RecentPlayRecord where songId = ?", new String[]{strId});
+                cursor = db.rawQuery("select * from RecentPlayRecord where songId = ?", new String[]{strId});
                 if(cursor.moveToFirst()){
                     db.execSQL("delete from RecentPlayRecord where songId = ?", new String[]{strId});
                     db.execSQL("insert into RecentPlayRecord values(?)", new String[]{strId});

@@ -15,4 +15,10 @@
     <string name="no_favorite_song">你还没有添加过喜欢的歌曲哦</string>
     <string name="no_hot_song">你最近还没有播放过歌曲</string>
     <string name="no_recent_song">你最近还没有播放过歌曲</string>
+    
+    <!--权限相关-->
+    <string name="tip">提示</string>
+    <string name="request_permission">应用需要一些权限以保证正常工作，如果您同意请在接下来的选项中选择允许</string>
+    <string name="ok">我知道了</string>
+    <string name="cannot_request_permission">应用无法获得权限，如需继续使用请手动到应用设置中开启权限。</string>
 </resources>
